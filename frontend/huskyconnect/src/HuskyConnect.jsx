@@ -1,5 +1,9 @@
-import { useState } from "react";
-import { Users, Sparkles, ShieldCheck, Clock, Link as LinkIcon, Star, ArrowRight } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import {
+  Users, Sparkles, ShieldCheck, Clock,
+  Link as LinkIcon, Star, ArrowRight
+} from "lucide-react";
+
 
 // Single-file, production-ready landing page for "HuskyConnect - Smart Matching Platform for UW Students"
 // Tech: React + TailwindCSS + lucide-react icons (no extra UI kit required)
@@ -14,6 +18,7 @@ export default function HuskyConnectLanding() {
         <Hero />
         <LogosStrip />
         <Features />
+        <RecommendationsPreview />
         <HowItWorks />
         <Testimonials />
         <CTA />
@@ -23,6 +28,88 @@ export default function HuskyConnectLanding() {
   );
 }
 
+function RecommendationsPreview() {
+  const [userId, setUserId] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [results, setResults] = useState([]);
+
+  useEffect(() => {
+    // Auto-load once for quick demo
+    fetchRecs(userId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function fetchRecs(id) {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch(`http://localhost:8000/recommendations/${id}?limit=5`);
+      if (!res.ok) {
+        const msg = await res.text();
+        throw new Error(msg || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      setResults(data.results || []);
+    } catch (e) {
+      setError(e.message || "Failed to load recommendations");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="py-16 bg-white">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-bold tracking-tight">Recommended connections</h2>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min={1}
+              value={userId}
+              onChange={(e) => setUserId(Number(e.target.value))}
+              className="w-24 rounded-xl border border-slate-300 px-3 py-1.5 text-sm"
+              placeholder="User ID"
+            />
+            <button
+              onClick={() => fetchRecs(userId)}
+              className="inline-flex items-center gap-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-700 to-purple-600 px-4 py-2 rounded-xl shadow-sm hover:brightness-110"
+            >
+              Refresh
+            </button>
+          </div>
+        </div>
+        <p className="text-slate-600 mb-6">
+          Based on shared interests and location overlap from your profile.
+        </p>
+        <div className="rounded-2xl border border-slate-200 p-4 bg-slate-50">
+          {loading && <div className="text-sm text-slate-600">Loading...</div>}
+          {error && <div className="text-sm text-red-600">{error}</div>}
+          {!loading && !error && results.length === 0 && (
+            <div className="text-sm text-slate-600">No recommendations found.</div>
+          )}
+          <ul className="divide-y divide-slate-200">
+            {results.map((r) => (
+              <li key={r.user_id} className="py-3 flex items-center justify-between">
+                <div>
+                  <div className="font-medium">{r.name}</div>
+                  <div className="text-xs text-slate-500">
+                    {r.city || "Unknown city"}{r.country ? ` • ${r.country}` : ""}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1">
+                    {Array.isArray(r.reasons) && r.reasons.length > 0 ? `Reasons: ${r.reasons.join(", ")}` : "No reasons available"}
+                  </div>
+                </div>
+                <div className="text-sm font-semibold text-purple-700">Score: {Math.round(r.score * 10) / 10}</div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </section>
+  );
+}
 function Header() {
   return (
     <header className="sticky top-0 z-40 backdrop-blur bg-white/70 border-b border-slate-200/60">
