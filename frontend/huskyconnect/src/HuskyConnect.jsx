@@ -4,7 +4,6 @@ import {
   Link as LinkIcon, Star, ArrowRight
 } from "lucide-react";
 
-<!-- trigger vercel build --> //testing
 // Single-file, production-ready landing page for "HuskyConnect - Smart Matching Platform for UW Students"
 // Tech: React + TailwindCSS + lucide-react icons (no extra UI kit required)
 // Drop into any React app. In Next.js, place as app/page.tsx (rename to TSX) or in src/pages/HuskyConnect.jsx and render it.
